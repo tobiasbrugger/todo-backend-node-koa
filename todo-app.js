@@ -6,11 +6,12 @@ const cors = require('@koa/cors');
 
 const app = new Koa();
 
-const todos = [
-  {'title': 'build an API', 'order': 1, 'completed': false},
-  {'title': '?????', 'order': 2, 'completed': false},
-  {'title': 'profit!', 'order': 3, 'completed': false}
-]
+let todos = {
+  0: {'title': 'build an API', 'order': 1, 'completed': false},
+  1: {'title': '?????', 'order': 2, 'completed': false},
+  2: {'title': 'profit!', 'order': 3, 'completed': false}
+};
+let nextId = 3;
 
 router.get('/todos/', list)
   .del('/todos/', clear)
@@ -20,14 +21,14 @@ router.get('/todos/', list)
   .del('/todos/:id', remove);
 
 async function list(ctx) {
-  ctx.body = todos.map((e, i) => {
-    e['id'] = i;
-    return e;
+  ctx.body = Object.keys(todos).map(k => {
+    todos[k].id = k;
+    return todos[k];
   });
 }
 
 async function clear(ctx) {
-  todos.length = 0;
+  todos = {};
   ctx.status = 204;
 }
 
@@ -38,8 +39,8 @@ async function add(ctx) {
   if (!typeof data === 'string' || !title.length) ctx.throw(400, {'error': '"title" must be a string with at least one character'});
 
   todo['completed'] = todo['completed'] || false;
-  todo['url'] = '//' + ctx.host + router.url('todo', todos.length);
-  todos.push(todo);
+  todo['url'] = '//' + ctx.host + router.url('todo', nextId);
+  todos[nextId++] = todo;
 
   ctx.status = 303;
   ctx.set('Location', todo['url']);
@@ -64,10 +65,9 @@ async function update(ctx) {
 
 async function remove(ctx) {
   const id = ctx.params.id;
-  const todo = todos[id]
-  if (!todo) ctx.throw(404, {'error': 'Todo not found'});
+  if (!todos[id]) ctx.throw(404, {'error': 'Todo not found'});
 
-  todos.splice(id, 1);
+  delete todos[id];
 
   ctx.status = 204;
 }
