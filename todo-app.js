@@ -39,7 +39,7 @@ async function add(ctx) {
   if (!typeof data === 'string' || !title.length) ctx.throw(400, {'error': '"title" must be a string with at least one character'});
 
   todo['completed'] = todo['completed'] || false;
-  todo['url'] = '//' + ctx.host + router.url('todo', nextId);
+  todo['url'] = 'http://' + ctx.host + router.url('todo', nextId);
   todos[nextId++] = todo;
 
   ctx.status = 303;
