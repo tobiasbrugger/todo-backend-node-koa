@@ -56,51 +56,55 @@ router
 async function delTodoTag(ctx) {
   const id = ctx.params.id;
   const tag_id = ctx.params.tag_id;
-  const tagIndex = todos[id].tags.findIndex((tag) => tag.id == tag_id);
-  if (tagIndex > -1) {
-    todos[id].tags.splice(tagIndex, 1);
-  } else {
-    ctx.throw(404, { error: "Tag not found in todo" });
-  }
-  ctx.status = 204;
+
+  const todo = await Todo.findByPk(id, { include: { model: Tag, as: "tags" } });
+  if (!todo) ctx.throw(404, { error: "Todo not found" });
+  await todo.removeTags(tag_id);
+
+  ctx.status = 200;
 }
 
 async function delTodoTags(ctx) {
   const id = ctx.params.id;
-  todos[id].tags = [];
+  const todo = await Todo.findByPk(id, { include: { model: Tag, as: "tags" } });
+  if (!todo) ctx.throw(404, { error: "Todo not found" });
+  await todo.setTags([]);
   ctx.status = 204;
 }
 
 async function addTodoTags(ctx) {
   const id = ctx.params.id;
   const tag_id = ctx.request.body.id;
-  const tag = tags[tag_id];
-  if (!tag) {
-    console.log("tag not found");
-    ctx.throw(404, { error: "Tag not found" });
+  const todo = await Todo.findByPk(id);
+  const tag = await Tag.findByPk(tag_id);
+  if (todo && tag) {
+    await todo.addTag(tag);
+  } else {
+    ctx.throw(404, { error: "Todo or Tag not found" });
   }
-  todos[id].tags.push(tag);
-  ctx.status = 201;
+
+  ctx.status = 200; // should be 204
   ctx.body = tag;
 }
 
 async function getTodoTags(ctx) {
   const id = ctx.params.id;
-  const todo = todos[id];
+  const todo = await Todo.findByPk(id, {
+    include: { model: Tag, as: "tags" },
+    plain: true,
+  });
   if (!todo) ctx.throw(404, { error: "Todo not found" });
-  ctx.body = todo.tags;
+  ctx.body = todo.dataValues["tags"].map((tag) => tag.dataValues);
   ctx.status = 200;
 }
 
 async function listTodos(ctx) {
-  ctx.body = Object.keys(todos).map((k) => {
-    todos[k].id = k;
-    return todos[k];
-  });
+  const todos = (await Todo.findAll()).map((todo) => todo.dataValues);
+  ctx.body = todos;
 }
 
 async function clearTodos(ctx) {
-  todos = {};
+  await Todo.destroy({ where: {} });
   ctx.status = 204;
 }
 
@@ -114,37 +118,36 @@ async function addTodos(ctx) {
     });
 
   todo["completed"] = todo["completed"] || false;
-  todo["url"] = "http://" + ctx.host + router.url("todo", nextTodoId);
-  todo["tags"] = [];
-  todo["id"] = nextTodoId;
-  todos[nextTodoId++] = todo;
 
+  const newTodo = await Todo.create(todo);
+  const url = `http://${ctx.host}/todos/${newTodo.id}`;
+  await newTodo.update({ url: url });
   ctx.status = 303;
-  ctx.set("Location", todo["url"]);
+  ctx.set("Location", url);
 }
 
 async function showTodos(ctx) {
   const id = ctx.params.id;
-  const todo = todos[id];
+  const todo = await Todo.findByPk(id, { include: { model: Tag, as: "tags" } });
+
   if (!todo) ctx.throw(404, { error: "Todo not found" });
-  todo.id = id;
   ctx.body = todo;
+  ctx.status = 201;
 }
 
 async function updateTodos(ctx) {
   const id = ctx.params.id;
-  const todo = todos[id];
+  await Todo.update(ctx.request.body, {
+    where: { id: id },
+  });
 
-  Object.assign(todo, ctx.request.body);
-
-  ctx.body = todo;
+  ctx.body = await Todo.findByPk(id);
 }
 
 async function removeTodos(ctx) {
   const id = ctx.params.id;
-  if (!todos[id]) ctx.throw(404, { error: "Todo not found" });
-
-  delete todos[id];
+  const deleted = await Todo.destroy({ where: { id: id } });
+  if (deleted != 1) ctx.throw(404, { error: "Todo not found" });
 
   ctx.status = 204;
 }
@@ -163,30 +166,24 @@ router
 async function listTodosForTag(ctx) {
   const tag_id = ctx.params.id;
 
-  let filtered_todos = Object.values(todos).filter((todo) => {
-    return todo.tags.some((tag) => tag.id == tag_id);
+  const tag = await Tag.findByPk(tag_id, {
+    include: { model: Todo, as: "todos" },
   });
-
-  ctx.body = filtered_todos;
+  ctx.body = tag.dataValues["todos"].map((todo) => todo.dataValues);
 }
 
 async function updateTags(ctx) {
   const id = ctx.params.id;
-  const tag = tags[id];
+  await Tag.update(ctx.request.body, { where: { id: id } });
 
-  Object.assign(tag, ctx.request.body);
-
-  ctx.body = tag;
+  ctx.body = await Tag.findByPk(id);
 }
 
 async function listTags(ctx) {
-  ctx.body = Object.keys(tags).map((k) => {
-    tags[k].id = k;
-    return tags[k];
-  });
+  ctx.body = (await Tag.findAll()).map((tag) => tag.dataValues);
 }
 async function clearTags(ctx) {
-  tags = {};
+  await Tag.destroy({ where: {} });
   ctx.status = 204;
 }
 async function addTags(ctx) {
@@ -197,30 +194,29 @@ async function addTags(ctx) {
     ctx.throw(400, {
       error: '"title" must be a string with at least one character',
     });
-  tag.id = nextTagId;
-  tag["url"] = "http://" + ctx.host + router.url("tag", nextTagId);
-  tag["todos"] = [];
-  tags[nextTagId++] = tag;
-  ctx.body = tag;
-  ctx.status = 201;
-  ctx.set("Location", tag["url"]);
+
+  const newTag = await Tag.create(tag);
+  let url = `http://${ctx.host}/tags/${newTag.id}`;
+  await newTag.update({ url: url });
+
+  ctx.status = 303;
+  ctx.set("Location", url);
 }
 
 async function showTags(ctx) {
   const id = Number(ctx.params.id);
-
-  const tag = tags[id];
+  const tag = await Tag.findByPk(id, { include: { model: Todo, as: "todos" } });
 
   if (!tag) ctx.throw(404, { error: "Tag not found" });
-  tag.id = id;
+
   ctx.body = tag;
+  ctx.status = 201;
 }
 
 async function removeTags(ctx) {
   const id = ctx.params.id;
-  if (!tags[id]) ctx.throw(404, { error: "Todo not found" });
-
-  delete tags[id];
+  const deleted = await Tag.destroy({ where: { id: id } });
+  if (deleted != 1) ctx.throw(404, { error: "Tag not found" });
 
   ctx.status = 204;
 }

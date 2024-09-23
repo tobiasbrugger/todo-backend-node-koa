@@ -6,7 +6,7 @@ const sequelize_db = new Sequelize({
 });
 
 async function init_db() {
-  return await sequelize_db.sync({ force: true });
+  return await sequelize_db.sync({ force: false });
 }
 
 const Todo = sequelize_db.define(
@@ -47,9 +47,8 @@ const Tag = sequelize_db.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    name: {
+    title: {
       type: DataTypes.TEXT,
-      allowNull: false,
     },
     url: {
       type: DataTypes.TEXT,
@@ -91,7 +90,15 @@ const TodoTag = sequelize_db.define(
   }
 );
 
-Todo.belongsToMany(Tag, { through: TodoTag, foreignKey: "todo_id" });
-Tag.belongsToMany(Todo, { through: TodoTag, foreignKey: "tag_id" });
+Todo.belongsToMany(Tag, {
+  through: TodoTag,
+  foreignKey: "todo_id",
+  as: "tags",
+});
+Tag.belongsToMany(Todo, {
+  through: TodoTag,
+  foreignKey: "tag_id",
+  as: "todos",
+});
 
 export { sequelize_db, Todo, Tag, TodoTag, init_db };
