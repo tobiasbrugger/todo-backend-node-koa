@@ -1,10 +1,15 @@
-const router = require("koa-router")();
+import Router from "koa-router";
+import Koa from "koa";
+import bodyParser from "koa-bodyparser";
+import cors from "@koa/cors";
 
-const Koa = require("koa");
-const bodyParser = require("koa-bodyparser");
-const cors = require("@koa/cors");
+import { sequelize_db, init_db, Tag, Todo, TodoTag } from "./sequelize.js";
+
+const router = new Router();
 
 const app = new Koa();
+
+init_db();
 
 let todos = {
   0: {
@@ -210,12 +215,7 @@ async function showTags(ctx) {
   tag.id = id;
   ctx.body = tag;
 }
-async function updateTags(ctx) {
-  const id = ctx.params.id;
-  const tag = tags[id];
-  Object.assign(tag, ctx.request.body);
-  ctx.body = tag;
-}
+
 async function removeTags(ctx) {
   const id = ctx.params.id;
   if (!tags[id]) ctx.throw(404, { error: "Todo not found" });

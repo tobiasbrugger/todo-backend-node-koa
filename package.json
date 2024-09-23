@@ -17,6 +17,10 @@
     "@koa/cors": "^2.2.2",
     "koa": "^2.5.2",
     "koa-bodyparser": "^4.2.1",
-    "koa-router": "^7.4.0"
-  }
+    "koa-router": "^7.4.0",
+    "sequelize": "^6.37.3",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "type": "module"
 }
