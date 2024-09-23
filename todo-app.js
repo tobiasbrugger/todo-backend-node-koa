@@ -11,34 +11,6 @@ const app = new Koa();
 
 init_db();
 
-let todos = {
-  0: {
-    title: "build an API",
-    order: 1,
-    completed: false,
-    tags: [],
-    url: null,
-    id: 0,
-  },
-  1: { title: "?????", order: 2, completed: false, tags: [], url: null, id: 1 },
-  2: {
-    title: "profit!",
-    order: 3,
-    completed: false,
-    tags: [],
-    url: null,
-    id: 2,
-  },
-};
-
-let tags = {
-  0: { title: "Urgent", url: null },
-  1: { title: "Home", url: null },
-  2: { title: "Work", url: null },
-};
-
-let nextTodoId = 3;
-let nextTagId = 3;
 //TODOS
 
 router
