@@ -1,7 +1,9 @@
 # todo-backend-node-koa
 
 Yet another [todo backend](http://todobackend.com) using Node.js with [Koa](https://koajs.com/).
-Additional Routes as well as a sqlite-DB with sequelize as an ORM have been added accoring to the exercise.
+Additional Routes for tags as well as a sqlite-DB with sequelize as an ORM have been added according to the exercise.
+
+DB-Schema is defined in sequelize.js.
 
 ## Installation
 
