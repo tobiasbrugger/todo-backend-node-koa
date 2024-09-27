@@ -1,5 +1,7 @@
 # todo-backend-node-koa
 
+Author: Tobias Brugger
+
 Yet another [todo backend](http://todobackend.com) using Node.js with [Koa](https://koajs.com/).
 Additional Routes for tags as well as a persistent sqlite-DB with sequelize as an ORM have been added according to the exercise.
 
