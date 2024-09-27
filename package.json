@@ -7,6 +7,9 @@
     "type": "git",
     "url": "git+https://github.com/DurandA/todo-backend-node-koa.git"
   },
+  "scripts": {
+    "start": "node todo-app.js"
+  },
   "author": "Arnaud Durand",
   "license": "ISC",
   "bugs": {
