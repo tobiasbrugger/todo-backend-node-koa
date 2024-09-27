@@ -3,7 +3,7 @@ import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import cors from "@koa/cors";
 
-import { sequelize_db, init_db, Tag, Todo, TodoTag } from "./sequelize.js";
+import { init_db, Tag, Todo } from "./sequelize.js";
 
 const router = new Router();
 

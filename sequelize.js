@@ -2,7 +2,7 @@ import { Sequelize, DataTypes } from "sequelize";
 
 const sequelize_db = new Sequelize({
   dialect: "sqlite",
-  storage: "./todos.db",
+  storage: "./db/todos.db",
 });
 
 async function init_db() {
